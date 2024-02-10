@@ -13,17 +13,15 @@ def upload_to_registry(args):
     }
 
     # Prepare files for POST request
-    for file in os.listdir(args.raw_data_folder):
-        raw_data_files = [('raw_data_folder', open(os.path.join(args.raw_data_folder, file), 'rb'))]
-    for file in os.listdir(args.processed_data_folder):
-        processed_data_files = [('processed_data_folder', open(os.path.join(args.processed_data_folder, file), 'rb')) ]
+    raw_data_files = [('raw_data_folder', open(os.path.join(args.raw_data_folder, file), 'rb')) for file in os.listdir(args.raw_data_folder) ]
+    processed_data_files = [('processed_data_folder', open(os.path.join(args.processed_data_folder, file), 'rb')) for file in os.listdir(args.processed_data_folder) ]
 
     # Combine data and files for the POST request
-    payload = {'dataset_name': args.dataset_name, 'summary_data_link': args.summary_data_link}
+    whole_data  = {'dataset_name': args.dataset_name, 'summary_data_link': args.summary_data_link}
     files = raw_data_files + processed_data_files
 
     # Send POST request
-    response = requests.post(url, data=payload, files=files)
+    response = requests.post(url, data=whole_data, files=files)
 
     # Check the response status
     if response.status_code == 200:
