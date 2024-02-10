@@ -1,9 +1,9 @@
 import os
 import requests
 import argparse
-from werkzeug.utils import secure_filename
 
-def uplaod_to_registry(args):
+def upload_to_registry(args):
+    # Base URL for the add_data endpoint
     url = "http://127.0.0.1:5000/add_data"
 
     # Prepare data for POST request
@@ -11,27 +11,25 @@ def uplaod_to_registry(args):
         'dataset_name': args.dataset_name,
         'summary_data_link': args.summary_data_link
     }
-    for uploaded_file in os.listdir(args.raw_data_folder):
-        # Ensure a safe filename using secure_filename
-        filename = secure_filename(uploaded_file)
-        file_path = os.path.join(args.raw_data_folder, uploaded_file)
 
-        # Include file in the 'files' parameter of the request
-        files = {'file': (filename, open(file_path, 'rb'))}
+    # Prepare files for POST request
+    for file in os.listdir(args.raw_data_folder):
+        raw_data_files = [('raw_data_folder', open(os.path.join(args.raw_data_folder, file), 'rb'))]
+    for file in os.listdir(args.processed_data_folder):
+        processed_data_files = [('processed_data_folder', open(os.path.join(args.processed_data_folder, file), 'rb')) ]
 
-        # Include other data in the 'data' parameter of the request
-        response = requests.post(url, data=data, files=files)
+    # Combine data and files for the POST request
+    payload = {'dataset_name': args.dataset_name, 'summary_data_link': args.summary_data_link}
+    files = raw_data_files + processed_data_files
 
-        # Check if the request was successful
-        if response.status_code == 200:
-            print(f"File {filename} uploaded successfully.")
-        else:
-            print(f"Failed to upload file {filename}. Status code: {response.status_code}")
+    # Send POST request
+    response = requests.post(url, data=payload, files=files)
+
+    # Check the response status
     if response.status_code == 200:
         print(f"Data added successfully for dataset: {args.dataset_name}")
     else:
         print(f"Failed to add data. Status code: {response.status_code}")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Add data via command line.")
@@ -41,4 +39,6 @@ if __name__ == "__main__":
     parser.add_argument('--summary_data_link', '-sdl', dest='summary_data_link', required=True, help="Summary data link")
     args = parser.parse_args()
 
-    uplaod_to_registry(args)
+    upload_to_registry(args)
+
+
